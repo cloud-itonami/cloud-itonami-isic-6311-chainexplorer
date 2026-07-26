@@ -92,6 +92,35 @@ Likewise a reorg never silently rewrites the index: `apply-block` returns
 the chain **unchanged** and classifies the conflict, and `:reorg/resolve`
 is never auto-eligible at any phase.
 
+## Public page (no backend)
+
+The GitHub Pages surface at
+<https://cloud-itonami.github.io/cloud-itonami-isic-6311-chainexplorer/>
+is a **static page with no backend**: your browser reads *your* endpoints,
+and `explorer.chain` — the same namespace the ExplorerGovernor uses —
+does the corroboration and finality classification client-side. The
+generator copies that `.cljc` next to the UI, and `web/verify_page.cljs`
+asserts the shipped copy is byte-identical to the source, so the page
+cannot drift from the actor's rules.
+
+The gates are the UI, not fine print: head vs the chain's own finalized
+head with their computed classes; per-endpoint hashes followed by the
+verdict, with **no hash shown at all** below quorum or on disagreement; a
+flat refusal to read from a single endpoint; the five accepted attribution
+classes shown with their re-check instructions and the refused ones listed
+by name.
+
+```bash
+cd web && nbb --classpath "../../../kotoba-lang/html/src:../../../kotoba-lang/css/src:../../../kotoba-lang/jp-go-digital-design-system/src" \
+  generate.cljs        # regenerate docs/index.html
+nbb verify_page.cljs   # 14 structural checks on the artifact that ships
+```
+
+UI stack is DADS (`kotoba-lang/jp-go-digital-design-system`) — the
+documented opt-out from the kotoba-uiux default, taken for the same reason
+the sibling operator console and the fleet catalog took it; see
+[`docs/adr/0002`](docs/adr/0002-public-page.md).
+
 ## Run
 
 ```bash
