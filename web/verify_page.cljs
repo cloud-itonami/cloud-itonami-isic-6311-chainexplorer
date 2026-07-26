@@ -1,0 +1,88 @@
+;; Headless verification for the generated public page. nbb script
+;; (Node-harnesses-in-nbb rule), same shape as cloud-itonami.github.io's
+;; verify_catalog.cljs.
+;;
+;; What it checks is deliberately narrow: the claims this page makes about
+;; ITSELF must be structurally true in the artifact that ships. A browser
+;; run proves the live behaviour (see docs/adr/0002); this proves the page
+;; cannot be published having quietly lost the parts that make the
+;; behaviour possible.
+;;
+;; Run (from this web/ directory):  nbb verify_page.cljs
+
+(require '["fs" :as fs]
+         '[clojure.string :as str])
+
+(def html (fs/readFileSync "../docs/index.html" "utf8"))
+(def ui (fs/readFileSync "../docs/explorer_ui.cljs" "utf8"))
+(def chain-copy (fs/readFileSync "../docs/explorer_chain.cljs" "utf8"))
+(def chain-src (fs/readFileSync "../src/explorer/chain.cljc" "utf8"))
+
+(def failures (atom []))
+(defn- check! [label ok?]
+  (when-not ok? (swap! failures conj label))
+  (println (if ok? "  ok  " "  FAIL") label))
+
+(println "verify_page:")
+
+;; 1. The shipped chain code IS the actor's chain code. If these ever
+;;    diverge, the page's central claim ("the browser runs the governor's
+;;    rules") becomes false, silently.
+(check! "docs/explorer_chain.cljs is byte-identical to src/explorer/chain.cljc"
+        (= chain-copy chain-src))
+
+;; 2. Script load order is a dependency order: html.core, then chain, then
+;;    the UI that calls both. Read the actual script srcs in document
+;;    order — matching on bare filenames would also match the footer prose
+;;    that names these files, which is how this check first passed while
+;;    proving nothing.
+(let [srcs (mapv second (re-seq #"<script[^>]*src=\"([^\"]+)\"" html))
+      local (filterv #(not (str/starts-with? % "http")) srcs)]
+  (check! "scripts load in dependency order (html.core -> chain -> ui)"
+          (= ["html_core.cljs" "explorer_chain.cljs" "explorer_ui.cljs"] local)))
+
+;; 3. The corroboration threshold shown to a reader is the one the code
+;;    enforces — not a number typed into prose.
+(check! "the UI reads the quorum from explorer.chain, never a literal"
+        (and (str/includes? ui "explorer.chain/default-min-endpoints")
+             (not (re-find #"独立したエンドポイントを\s*2\s*つ" ui))))
+
+;; 4. Every action clears prior output first. A refusal rendered beneath a
+;;    previous success reads as "corroborated, with a warning" — the exact
+;;    misreading this page exists to prevent (found in a live browser run).
+(check! "read-chain! clears prior output before doing anything"
+        (re-find #"\(defn- read-chain! \[\]\s*(?:;;[^\n]*\n\s*)*\(clear!" ui))
+(check! "lookup-tx! clears prior output before doing anything"
+        (re-find #"\(defn- lookup-tx! \[\]\s*(?:;;[^\n]*\n\s*)*\(clear!" ui))
+
+;; 5. The refusals the page advertises are actually listed in it.
+(doseq [c ["heuristic-clustering" "common-input-ownership" "vendor-risk-score"
+           "chain-analytics-score" "social-report" "llm-inference"]]
+  (check! (str "refused class is named on the page: " c) (str/includes? html c)))
+
+;; 6. No page-level backend. The only network the page performs is the
+;;    reader's own JSON-RPC; a fetch to any other origin would contradict
+;;    "there is no backend".
+(check! "the UI fetches only endpoints the reader supplied"
+        (let [fetches (re-seq #"js/fetch\s+([^\s)]+)" ui)]
+          (every? (fn [[_ target]] (= "url" target)) fetches)))
+
+;; 7. Read-only: no page path constructs or sends a transaction.
+(check! "no transaction-sending JSON-RPC method appears anywhere"
+        (not (re-find #"eth_sendTransaction|eth_sendRawTransaction|eth_sign|personal_"
+                      (str html ui))))
+
+;; 8. Identity attribution has no INPUT SURFACE here at all. Checked as
+;;    "which fields exist", not "which words appear": the page's own
+;;    refusal copy necessarily contains words like KYC, and a keyword scan
+;;    would fail on the very text that states the refusal.
+(let [ids (set (mapv second (re-seq #"<(?:input|textarea|select)[^>]*id=\"([^\"]+)\"" html)))]
+  (check! (str "the page's only fields are the two chain inputs, got: " (sort ids))
+          (= #{"endpoints" "txhash"} ids)))
+
+(println)
+(if (seq @failures)
+  (do (println "FAILED:" (count @failures))
+      (doseq [f @failures] (println " -" f))
+      (js/process.exit 1))
+  (println "all checks passed"))

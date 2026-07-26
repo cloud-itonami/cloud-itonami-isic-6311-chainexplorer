@@ -1,0 +1,229 @@
+;; Generates the PUBLIC explorer page (docs/index.html) served by GitHub
+;; Pages. nbb authoring + scittle in-browser ClojureScript, zero build
+;; step — the same pattern as cloud-itonami.github.io's catalog and the
+;; venture demo pages.
+;;
+;; UI stack: kotoba-lang/jp-go-digital-design-system (DADS). This is the
+;; documented opt-out from the kotoba-uiux default stack (ADR-2607141915:
+;; "日本の公共・行政文脈サービス向けの明示的 opt-out 先。採用 repo は理由を
+;; ADR に書く"), taken here for the same reason the sibling
+;; cloud-itonami-isic-6311 operator console and the fleet catalog took it:
+;; these are public open-business surfaces in the cloud-itonami fleet and
+;; they should look like one thing. Recorded in docs/adr/0002.
+;;
+;; What makes this page unusual: it has NO BACKEND. The browser reads the
+;; reader's own RPC endpoints and runs `explorer.chain` — the very
+;; namespace the ExplorerGovernor uses — to corroborate and to classify
+;; finality. The generator copies that .cljc next to the UI code, so the
+;; page cannot drift from the actor's rules; it IS the actor's rules.
+;;
+;; Run (from this web/ directory, inside the monorepo checkout):
+;;   nbb --classpath "../../../kotoba-lang/html/src:../../../kotoba-lang/css/src:../../../kotoba-lang/jp-go-digital-design-system/src" \
+;;     generate.cljs
+;;   nbb verify_page.cljs
+
+(require '[clojure.string :as str]
+         '[css.core :as css]
+         '[html.core]
+         '[jp-go-dds.core :as dds]
+         '[jp-go-dds.page :as page]
+         '["fs" :as fs])
+
+;; jp-go-dds.page is a pure function (no I/O by design), so the caller
+;; reads the vendored DADS stylesheet and passes it in. JP_GO_DDS_CSS
+;; overrides the default monorepo/sibling-fork layout (CI, worktrees).
+(def dds-css-path
+  (or (some-> js/process.env.JP_GO_DDS_CSS not-empty)
+      "../../../kotoba-lang/jp-go-digital-design-system/resources/jp_go_dds/dds.css"))
+(def dds-css (fs/readFileSync dds-css-path "utf8"))
+
+(def html-root
+  (or (some-> js/process.env.KOTOBA_HTML_ROOT not-empty) "../../../kotoba-lang/html"))
+
+;; Default endpoints are PREFILLED BUT EDITABLE, and are the reader's to
+;; change: this page never claims they are independent for them. Two
+;; unrelated public providers is the honest starting point for a page
+;; whose whole thesis is "one node is one party's claim".
+(def default-endpoints
+  ["https://ethereum-rpc.publicnode.com"
+   "https://eth.drpc.org"])
+
+;; ─────────────────────────── app CSS ──────────────────────────────────
+;; Page-specific tuning only. CSS is written as EDN (kotoba-lang/css turns
+;; `[selector decls]` vectors into CSS) — never raw CSS notation, never a
+;; raw hex colour: every colour is a DADS token (kotoba-uiux rule 2). A
+;; vector, not a map, because map ordering breaks the cascade above ~8
+;; entries. Layout comes from dds-ext-* (jp-go-dds.core/ext-rules).
+;;
+;; The last three rules are the design-quality audit corrections
+;; ADR-2607141915 measured as necessary on bare DADS (color-scheme
+;; declaration, 44px tap targets, safe-area on all edges).
+(def app-rules
+  [[".x-lead" {:color "var(--color-neutral-solid-gray-700)"
+               :line-height 1.7 :margin ".75rem 0 0"}]
+   [".x-note" {:color "var(--color-neutral-solid-gray-700)"
+               :font-size "calc(14 / 16 * 1rem)" :line-height 1.7
+               :margin ".75rem 0 0"}]
+   [".x-status" {:color "var(--color-neutral-solid-gray-700)"
+                 :font-size "calc(14 / 16 * 1rem)" :margin "0"}]
+   [".x-ok" {:color "var(--color-success-solid-green-700)" :font-weight 700
+             :margin ".75rem 0 .25rem"}]
+   [".x-refusal" {:border-left "4px solid var(--color-error-solid-red-800)"
+                  :padding ".75rem 1rem" :margin ".75rem 0 0"
+                  :background "var(--color-neutral-solid-gray-50)"}]
+   [".x-refusal-inline" {:color "var(--color-error-solid-red-800)"}]
+   [".x-field" {:display "block" :margin "0 0 1rem"}]
+   [".x-field textarea, .x-field input" {:width "100%" :font-family "var(--font-family-mono, ui-monospace, monospace)"}]
+   [".x-out" {:margin "1rem 0 0"}]
+   [".x-refuses li" {:margin ".35rem 0" :line-height 1.7}]
+   [".x-recheck" {:color "var(--color-neutral-solid-gray-700)"
+                  :font-size "calc(14 / 16 * 1rem)"}]
+   ;; audit corrections (ADR-2607141915)
+   [":root" {:color-scheme "light"}]
+   ["button, .dads-button, input, textarea" {:min-height "44px"}]
+   ["body" {:padding-block "env(safe-area-inset-top) env(safe-area-inset-bottom)"
+            :padding-inline "env(safe-area-inset-left) env(safe-area-inset-right)"}]])
+
+(def app-css (css/css {:rules app-rules}))
+
+;; ─────────────────────────── content ──────────────────────────────────
+
+(def attribution-classes
+  "Mirrors explorer.facts/catalog. Kept as data here (rather than parsed
+  out of the .cljc) so the page states the same five classes the governor
+  accepts, with the re-check instruction that is a REQUIRED field of every
+  catalog entry — the property that separates them from what is refused."
+  [["onchain-self-attestation" "アドレス自身によるオンチェーン表明"
+    "同じレコードを任意のノードから、引用されたブロックで読む"]
+   ["official-published-address-list" "主体自身が公開したアドレスリスト"
+    "引用先の公開物を取得し、その中にアドレスがあることを確認する"]
+   ["sanctions-list-publication" "制裁当局自身の公表"
+    "引用されたエントリを当局自身の公表リストで引く"]
+   ["verified-contract-source" "デプロイ済みバイトコードと一致する検証済みソース"
+    "引用されたソースを再コンパイルし、オンチェーンのコードとバイト比較する"]
+   ["protocol-registry" "オンチェーンの正規レジストリが答える"
+    "同じ read-only 呼び出しを任意のノードに対して行う"]])
+
+(def refused-classes
+  ["heuristic-clustering" "common-input-ownership" "vendor-risk-score"
+   "chain-analytics-score" "social-report" "forum-report" "llm-inference"
+   "pattern-inference" "self-reported-unverified"])
+
+(defn- section [id heading & body]
+  [:section {:class "dds-ext-section" :id id}
+   [:h2 {:class "dads-heading" :data-size "32"} heading]
+   (into [:<>] body)])
+
+(def body
+  [:div {:class "dds-ext-container"}
+   [:header {:class "x-header"}
+    [:h1 {:class "dads-heading" :data-size "45"}
+     "chain explorer "
+     [:span {:class "dads-chip-label" :data-style "filled-1" :data-color "blue"}
+      "read-only"]]
+    [:p {:class "x-lead"}
+     "cloud-itonami-isic-6311-chainexplorer の公開面。"
+     [:strong "バックエンドはありません"]
+     "— あなたのブラウザがあなたの指定したエンドポイントを読み、"
+     [:code "explorer.chain"]
+     "（ExplorerGovernor が使うのと同じ名前空間）が裏取りと finality 判定を"
+     "その場で行います。このページを信用する必要はありません。"]]
+
+   (section "live" "chain を読む"
+     [:p {:class "x-note"}
+      "エンドポイントは編集できます。既定の2つは無関係な公開プロバイダですが、"
+      [:strong "それらが本当に独立かどうかをこのページは検証できません"]
+      "——同じ上流にぶら下がる2つは「独立でないのに一致」します。独立性は読み手の責任です。"]
+     [:label {:class "x-field" :for "endpoints"}
+      [:span {:class "dads-form-control-label"} "JSON-RPC エンドポイント（1行に1つ）"]
+      [:textarea {:id "endpoints" :class "dads-textarea" :rows "3"}
+       (str/join "\n" default-endpoints)]]
+     [:button {:id "read-chain" :class "dads-button" :data-style "filled"
+               :data-size "md" :type "button"}
+      "chain を読む"]
+     [:p {:id "status" :class "x-out"}]
+     [:div {:id "head-out" :class "x-out"}]
+     [:div {:id "corr-out" :class "x-out"}])
+
+   (section "tx" "トランザクションを引く"
+     [:label {:class "x-field" :for "txhash"}
+      [:span {:class "dads-form-control-label"} "transaction hash"]
+      [:input {:id "txhash" :class "dads-input-text" :type "text"
+               :placeholder "0x…" :autocomplete "off"}]]
+     [:button {:id "lookup-tx" :class "dads-button" :data-style "outline"
+               :data-size "md" :type "button"}
+      "引く"]
+     [:div {:id "tx-out" :class "x-out"}])
+
+   (section "attribution" "ラベルの出典として認めるもの"
+     [:p {:class "x-lead"}
+      "アドレスにラベルを付けるには、次の5クラスのいずれかを"
+      [:strong "再検証可能な参照付きで"]
+      "引用しなければなりません。各クラスには「読み手がどう確かめるか」が"
+      "必須フィールドとして付いています。"]
+     [:div {:class "dads-table" :data-row-stripe true}
+      [:table {:class "dads-table__table"}
+       [:thead [:tr (into [:<>] (map (fn [h] [:th {:class "dads-table__col-header" :scope "col"} h])
+                                     ["class" "根拠" "読み手による再検証"]))]]
+       (into [:tbody]
+             (map (fn [[c n r]]
+                    [:tr [:td [:code c]] [:td n] [:td {:class "x-recheck"} r]])
+                  attribution-classes))]])
+
+   (section "refuses" "このエクスプローラがしないこと"
+     [:div {:class "x-refusal"}
+      [:p [:strong "アドレスを実在の個人に紐付けません。"]
+       "人的承認の経路もありません——「承認が要る」でも「上位 tier のみ」でもなく、"
+       "拒否です。store のスキーマにも人物・KYC・IP・端末 ID を置く場所がありません。"]]
+     [:p {:class "x-lead"}
+      "また、次のクラスは出典として" [:strong "存在しません"]
+      "——公開エクスプローラの多くが実際にラベル付けに使っている手法そのものですが、"
+      "いずれも当事者が反証できない主張だからです（引用できるクラスが無いので、"
+      "governor が構造的に拒否します）:"]
+     [:ul {:class "x-refuses"}
+      (into [:<>] (map (fn [c] [:li [:code c]]) refused-classes))]
+     [:p {:class "x-note"}
+      "疑義ラベル（制裁指定・詐欺・ハッキング資金…）は、"
+      [:strong "完璧に出典が付いていても"]
+      "必ず人間の承認を経ます。制裁指定は実在の事実ですが、それを当事者について"
+      "大規模に公開することは依然として判断だからです。"])
+
+   [:footer {:class "x-footer"}
+    [:p "このページは " [:code "web/generate.cljs"] " (nbb) が生成し、"
+     [:code "web/explorer_ui.cljs"] " (scittle = ブラウザ内 ClojureScript) が実行しています。"
+     "裏取りと finality の計算は actor 本体の " [:code "explorer.chain"] " をそのまま読み込んでいます。 "
+     [:a {:href "https://github.com/cloud-itonami/cloud-itonami-isic-6311-chainexplorer"} "source"]
+     " · "
+     [:a {:href "samples/operator-console.html"} "operator console"]
+     " · "
+     [:a {:href "https://cloud-itonami.github.io/"} "fleet catalog"]]]])
+
+;; script は html.core の raw-text tag。子は素の文字列で渡す(jp-go-dds.page 参照)。
+;; 読み込み順は依存順: html.core → explorer.chain → UI。
+(def scripts
+  [[:script {:src "https://cdn.jsdelivr.net/npm/scittle@0.6.22/dist/scittle.js"}]
+   [:script {:type "application/x-scittle" :src "html_core.cljs"}]
+   [:script {:type "application/x-scittle" :src "explorer_chain.cljs"}]
+   [:script {:type "application/x-scittle" :src "explorer_ui.cljs"}]])
+
+(fs/mkdirSync "../docs" #js {:recursive true})
+(fs/writeFileSync
+ "../docs/index.html"
+ (str (page/->page
+       {:title "chain explorer — cloud-itonami-isic-6311-chainexplorer"
+        :description "バックエンド無しの read-only チェーンエクスプローラ。独立エンドポイントの裏取りが取れないブロックは表示せず、finality はチェーン自身の finalized タグから決め、アドレスを個人に紐付けません。"
+        :lang "ja"
+        :css dds-css
+        :app-css app-css}
+       body
+       scripts)
+      "\n"))
+
+;; Browser-side .cljs are copied, not built. `explorer_chain.cljs` is the
+;; actor's own src/explorer/chain.cljc — the page runs the governor's
+;; corroboration and finality code, so it cannot drift from it.
+(fs/copyFileSync "explorer_ui.cljs" "../docs/explorer_ui.cljs")
+(fs/copyFileSync "../src/explorer/chain.cljc" "../docs/explorer_chain.cljs")
+(fs/copyFileSync (str html-root "/src/html/core.cljc") "../docs/html_core.cljs")
+
+(println "wrote docs/index.html + explorer_ui.cljs + explorer_chain.cljs + html_core.cljs")
