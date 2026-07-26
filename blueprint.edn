@@ -1,0 +1,52 @@
+{:itonami.blueprint/id "cloud-itonami-isic-6311-chainexplorer"
+ :itonami.blueprint/name "Read-Only Chain Explorer (corroborated, finality-honest, non-attributing)"
+ :itonami.blueprint/isic-rev4 "6311"
+ :itonami.blueprint/role "chainexplorer"
+ :itonami.blueprint/domain :data/chain-explorer
+ :itonami.blueprint/license "AGPL-3.0-or-later"
+ :itonami.blueprint/social-impact [:transparency :privacy :consumer-protection]
+ :itonami.blueprint/governor :explorer-governor
+ :itonami.blueprint/robotics false
+ :itonami.blueprint/required-technologies [:audit-ledger :identity :dmn]
+ :itonami.blueprint/optional-technologies []
+ :itonami.blueprint/status :public-oss
+ :itonami.blueprint/maturity :implemented
+ :itonami.blueprint/design-adr "ADR-2607262600"
+ :itonami.blueprint/sibling "cloud-itonami-isic-6311 (market data); this repo is the chain-observation satellite"
+
+ ;; HARD = enforced by the ExplorerGovernor with no human-approval path.
+ ;; SOFT = always routed to a human, never auto-committed at any phase.
+ :itonami.blueprint/invariants
+ [{:inv 1 :hard true :name :no-identity-attribution
+   :rule "an address is never linked to a natural person; any proposal carrying identity fields is refused outright, with no approval path"}
+  {:inv 2 :hard true :name :recheckable-attribution-only
+   :rule "an address label must cite a closed-catalog class (self-attestation / entity-published list / sanctions publication / verified source / on-chain registry) with a non-blank ref; heuristic clustering, vendor risk scores, social reports and LLM inference have no class to cite"}
+  {:inv 3 :hard true :name :finality-never-overclaimed
+   :rule "a disclosed fact may not claim a stronger finality than it has; without the chain's own finalized head, :final is unreachable"}
+  {:inv 4 :hard true :name :multi-endpoint-corroboration
+   :rule "a canonical-chain fact requires >= 2 independent endpoints agreeing on the block hash; disagreement is reported, never out-voted"}
+  {:inv 5 :hard true :name :read-only-chain-access
+   :rule "no transaction is ever constructed, signed or broadcast, and no key is handled; the JSON-RPC method whitelist enforces this in code"}
+  {:inv 6 :hard true :name :no-silent-history-rewrite
+   :rule "an index operation never overwrites a block already recorded at a height; a conflicting block is classified as a reorg and the chain is returned unchanged"}
+  {:inv 7 :soft true :name :allegations-always-human
+   :rule "any negative characterization of an address (sanctioned/scam/hack-proceeds/...) reaches a human at any phase and any confidence, even when perfectly sourced"}
+  {:inv 8 :soft true :name :labels-never-unattended
+   :rule ":label/assert is absent from every phase's auto set; attaching a name to someone else's address is never done unattended"}
+  {:inv 9 :soft true :name :reorg-is-a-human-decision
+   :rule ":reorg/resolve never auto-applies — a reorg means already-disclosed facts may now be false"}
+  {:inv 10 :hard true :name :contracted-disclosure-only
+   :rule "disclosure is served only to a registered active subscriber, within its tier's column set; labels and their citations are a contracted tier, not a default"}]
+
+ :itonami.blueprint/non-goals
+ ["wallet functionality, transaction construction, signing or broadcast"
+  "address clustering / de-anonymization heuristics of any kind"
+  "risk scoring or compliance screening as a service"
+  "storing personal data — the schema has no field for a person, KYC record, IP or device id"
+  "price or market data (that is the sibling cloud-itonami-isic-6311)"]
+
+ :itonami.blueprint/verification
+ {:offline "clojure -M:dev:test (governor contract, chain semantics, catalog honesty)"
+  :offline-demo "clojure -M:dev:run"
+  :live "ETH_RPC_URLS=<a>,<b> clojure -M:rpc:dev:run-rpc"
+  :live-verified "2026-07-26: two independent public endpoints agreed on block 25617339 -> commit; the same block from one endpoint -> hold (corroboration-gate). Real finalized head 25617272 vs head 25617344 classified :final / :probabilistic respectively."}}

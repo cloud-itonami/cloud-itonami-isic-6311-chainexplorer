@@ -1,0 +1,41 @@
+{:paths ["src"]
+ ;; langgraph powers the explorer.operation StateGraph and brings langchain
+ ;; transitively (langchain.model is the advisor seam). Both live in the
+ ;; kotoba-lang org of this workspace and are all-.cljc / portable
+ ;; (kotoba wasm -> clojurewasm -> ClojureScript -> nbb runtime priority,
+ ;; CLAUDE.md). These :local/root paths resolve inside the monorepo
+ ;; checkout; a standalone fork overrides them with git coordinates.
+ :deps {io.github.kotoba-lang/langgraph
+        {:local/root "../../kotoba-lang/langgraph"}}
+ :aliases
+ {;; offline workspace dev -- pin transitive langchain to local checkout
+  :dev {:override-deps
+        {io.github.kotoba-lang/langchain
+         {:local/root "../../kotoba-lang/langchain"}}}
+  ;; clojure -M:dev:run -> drive the offline 9-operation demo
+  :run {:main-opts ["-m" "explorer.sim"]}
+  ;; clojure -M:dev:render-html -> build docs/samples/operator-console.html
+  :render-html {:main-opts ["-m" "explorer.render-html"]}
+  :test {:extra-paths ["test"]
+         :extra-deps {io.github.cognitect-labs/test-runner
+                      {:git/tag "v0.5.1" :git/sha "dfb30dd"}}
+         :main-opts ["-m" "cognitect.test-runner"]
+         :exec-fn cognitect.test-runner.api/test}
+  ;; Live multi-endpoint chain reads. HERE and not in :deps or :test on
+  ;; purpose: only explorer.rpc needs org-ethereum-jsonrpc, nothing under
+  ;; test/ requires that namespace, and CI's offline `clojure -M:dev:test`
+  ;; job checks out only langgraph/langchain -- so the test path must not
+  ;; depend on a third sibling checkout. Everything worth testing about
+  ;; chain semantics is pure and lives in explorer.chain, which has no
+  ;; external dependency at all.
+  ;;   ETH_RPC_URLS=https://a,https://b clojure -M:rpc:dev:run-rpc
+  :rpc {:extra-deps {http-kit/http-kit {:mvn/version "2.8.0"}
+                     metosin/jsonista {:mvn/version "0.3.11"}
+                     io.github.kotoba-lang/org-ethereum-jsonrpc
+                     {:local/root "../../kotoba-lang/org-ethereum-jsonrpc"}}}
+  :run-rpc {:main-opts ["-m" "explorer.rpc-demo"]}
+  ;; static analysis -- clj-kondo from deps (no binary), errors fail CI.
+  :lint {:replace-deps {clj-kondo/clj-kondo {:mvn/version "2024.11.14"}}
+         :main-opts ["-m" "clj-kondo.main"
+                     "--lint" "src" "test"
+                     "--fail-level" "error"]}}}

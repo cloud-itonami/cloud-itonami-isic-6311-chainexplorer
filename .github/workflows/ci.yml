@@ -1,0 +1,54 @@
+name: ci
+
+# NOTE: the cloud-itonami org may disable GitHub Actions org-wide; this
+# workflow is kept correct and ready regardless — it runs verbatim once
+# Actions are enabled. Until then the gates run locally / in the west
+# superproject: `clojure -M:lint` and `clojure -M:dev:test`.
+#
+# The test job needs only langgraph + langchain (both PUBLIC) laid out at
+# their monorepo-relative paths. It deliberately does NOT check out
+# org-ethereum-jsonrpc: that dependency lives in the `:rpc` alias only and
+# nothing under test/ requires `explorer.rpc`, so the whole suite is
+# offline and needs no network and no third checkout.
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with: { distribution: temurin, java-version: "21" }
+      - uses: DeLaGuardo/setup-clojure@13.0
+        with: { cli: latest }
+      - name: clj-kondo (errors fail the build)
+        run: clojure -M:lint
+
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with: { path: orgs/cloud-itonami/cloud-itonami-isic-6311-chainexplorer }
+      - uses: actions/checkout@v4
+        with:
+          repository: kotoba-lang/langgraph
+          path: orgs/kotoba-lang/langgraph
+      - uses: actions/checkout@v4
+        with:
+          repository: kotoba-lang/langchain
+          path: orgs/kotoba-lang/langchain
+      - uses: actions/setup-java@v4
+        with: { distribution: temurin, java-version: "21" }
+      - uses: DeLaGuardo/setup-clojure@13.0
+        with: { cli: latest }
+      - name: test (governor contract · chain semantics · catalog honesty)
+        working-directory: orgs/cloud-itonami/cloud-itonami-isic-6311-chainexplorer
+        run: clojure -M:dev:test
+      - name: offline demo reaches every disposition
+        working-directory: orgs/cloud-itonami/cloud-itonami-isic-6311-chainexplorer
+        run: clojure -M:dev:run

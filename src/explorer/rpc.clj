@@ -1,0 +1,132 @@
+(ns explorer.rpc
+  "Chain transport — reads public Ethereum JSON-RPC from SEVERAL
+  independent endpoints and hands the observations to
+  `explorer.chain/corroboration` so the governor can decide whether they
+  agree.
+
+  **Why plural endpoints is the design, not a nicety**: an explorer that
+  reads one RPC provider is republishing that provider's view of the chain
+  under its own name. That provider can be behind, on a minority fork, or
+  simply wrong, and the explorer's readers have no way to tell. Reading N
+  independent endpoints and refusing to publish when they disagree is the
+  cheapest honest thing available, and disagreement is exactly the signal a
+  human should see (it usually means a live reorg).
+
+  **Read-only, enforced upstream**: every request is built through
+  `kotobase.ethereum.rpc/build-request`, whose `eth-method-whitelist`
+  throws for anything that is not a read method. This namespace never
+  constructs, signs or broadcasts a transaction and never touches a key.
+
+  **The endpoints are the caller's**: nothing here hardcodes a provider or
+  reads a credential from env — `explorer.rpc-demo` reads
+  `ETH_RPC_URLS` (comma-separated) and passes them in explicitly, the same
+  injected-credential discipline as the sibling actor's feed connectors.
+
+  Plain `.clj` and declared in the `:rpc` alias only: nothing under
+  `test/` requires this namespace, so `clojure -M:dev:test` stays offline
+  and needs no extra sibling checkout."
+  (:require [clojure.string :as str]
+            [jsonista.core :as j]
+            [kotobase.ethereum.rpc :as rpc]
+            [org.httpkit.client :as http]))
+
+(defn- rpc!
+  "POST one JSON-RPC request and return the decoded result, or throw."
+  [endpoint method params]
+  (let [payload (rpc/build-request method params 1)
+        {:keys [status body error]} @(http/post endpoint
+                                                {:headers {"content-type" "application/json"}
+                                                 :body (j/write-value-as-string payload)
+                                                 :timeout 15000})]
+    (when error
+      (throw (ex-info "explorer.rpc: HTTP transport error"
+                      {:endpoint endpoint :method method :error error})))
+    (when-not (<= 200 status 299)
+      (throw (ex-info "explorer.rpc: HTTP error status"
+                      {:endpoint endpoint :method method :status status})))
+    (let [parsed (rpc/parse-response (j/read-value body))]
+      (if (:ok? parsed)
+        (:result parsed)
+        (throw (ex-info "explorer.rpc: JSON-RPC error"
+                        {:endpoint endpoint :method method :error (:error parsed)}))))))
+
+(defn- ->block
+  "Raw `eth_getBlockByNumber` result (string keys) -> the header linkage
+  `explorer.chain` works in. nil for a missing block."
+  [b]
+  (when (map? b)
+    {:number (rpc/hex->long (get b "number"))
+     :hash (get b "hash")
+     :parent-hash (get b "parentHash")
+     :timestamp (rpc/hex->long (get b "timestamp"))}))
+
+(defn block-at
+  "Read one block header from one endpoint. `tag` is a block number or one
+  of the chain's own tags (\"latest\", \"finalized\", \"safe\")."
+  [endpoint tag]
+  (let [param (if (number? tag) (str "0x" (Integer/toString (int tag) 16)) (str tag))]
+    (->block (rpc! endpoint "eth_getBlockByNumber" [param false]))))
+
+(defn finalized-number
+  "The chain's OWN finalized head from one endpoint, or nil if the endpoint
+  does not serve the `finalized` tag. Nil is propagated honestly:
+  `explorer.chain/finality-class` will then never return `:final`, rather
+  than substituting a depth heuristic and calling it finality."
+  [endpoint]
+  (try (:number (block-at endpoint "finalized"))
+       (catch Exception _ nil)))
+
+(defn observe-block
+  "Ask EVERY endpoint for the same block and return
+  `{:observations [{:endpoint :number :hash}..] :blocks [..] :errors [..]}`.
+  An endpoint that fails contributes an error entry, not an exception — the
+  corroboration check then simply has fewer agreeing endpoints, which is
+  the correct degradation (it publishes nothing rather than trusting the
+  survivors)."
+  [endpoints tag]
+  (reduce (fn [acc ep]
+            (try
+              (let [b (block-at ep tag)]
+                (if b
+                  (-> acc
+                      (update :observations conj {:endpoint ep :number (:number b) :hash (:hash b)})
+                      (update :blocks conj b))
+                  (update acc :errors conj {:endpoint ep :error :no-block})))
+              (catch Exception e
+                (update acc :errors conj {:endpoint ep :error (.getMessage e)}))))
+          {:observations [] :blocks [] :errors []}
+          endpoints))
+
+(defn index-request
+  "Build a governable `:block/index` request from a multi-endpoint
+  observation. The corroboration EVIDENCE travels on the request; the
+  governor re-runs `chain/corroboration` itself rather than trusting any
+  summary computed here.
+
+  Returns nil when no endpoint produced a block at all — there is nothing
+  to propose, as distinct from proposing something unverified."
+  [{:keys [observations blocks]}]
+  (when-let [b (first blocks)]
+    {:op :block/index
+     :subject (str "block-" (:number b))
+     :block b
+     :observations observations}))
+
+(defn head-context
+  "`{:head-number .. :finalized-number ..}` for finality classification,
+  taken from the first endpoint that answers. `:finalized-number` stays nil
+  when no endpoint serves the tag."
+  [endpoints]
+  (let [head (some (fn [ep] (try (:number (block-at ep "latest")) (catch Exception _ nil)))
+                   endpoints)
+        fin (some (fn [ep] (finalized-number ep)) endpoints)]
+    {:head-number head :finalized-number fin}))
+
+(defn parse-endpoints
+  "\"https://a,https://b\" -> [\"https://a\" \"https://b\"]. Blank entries
+  dropped; no default endpoint is ever substituted."
+  [s]
+  (->> (str/split (or s "") #",")
+       (map str/trim)
+       (remove str/blank?)
+       vec))

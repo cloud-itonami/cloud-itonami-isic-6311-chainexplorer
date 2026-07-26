@@ -1,0 +1,57 @@
+<!doctype html>
+<html lang="ja"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>chainexplorer — operator console</title>
+<style>
+:root{color-scheme:light dark}
+body{font:15px/1.6 ui-sans-serif,system-ui,sans-serif;margin:0;padding:2rem;max-width:64rem}
+h1{font-size:1.5rem;margin:0 0 .25rem}
+p.sub{color:#666;margin:0 0 2rem}
+table{border-collapse:collapse;width:100%;margin:0 0 2rem}
+th,td{text-align:left;padding:.5rem .6rem;border-bottom:1px solid #8883;vertical-align:top}
+th{font-weight:600;font-size:.85rem;color:#666}
+td.ok{color:#1a7f37;font-weight:600}
+td.warn{color:#b35900;font-weight:600}
+td.detail{color:#666;font-size:.85rem}
+code{font:13px ui-monospace,monospace}
+ul{padding-left:1.2rem} li{margin:.2rem 0}
+.note{background:#8881;padding:1rem;border-radius:.5rem;font-size:.9rem}
+</style></head><body>
+  <h1>cloud-itonami-isic-6311-chainexplorer</h1>
+  <p class="sub">explorer.render-html — every row below was produced by running the real OperationActor, holds included.</p>
+  <h2>Decision ledger</h2>
+  <table>
+    <thead><tr><th>op</th><th>subject</th><th>disposition</th><th>basis</th><th>detail</th></tr></thead>
+    <tbody>
+        <tr><td><code>index</code></td><td><code>block-102</code></td><td class="ok">commit</td><td>number, hash, parent-hash</td><td class="detail">committed</td></tr>
+        <tr><td><code>index</code></td><td><code>block-103</code></td><td class="warn">hold</td><td>corroboration-gate</td><td class="detail">独立ノードの裏取りが不足: agree=1 endpoints=1 required=2</td></tr>
+        <tr><td><code>assert</code></td><td><code>0xdemoc3</code></td><td class="ok">commit</td><td>attribution</td><td class="detail">committed</td></tr>
+        <tr><td><code>assert</code></td><td><code>0xdemod4</code></td><td class="warn">hold</td><td>attribution-gate</td><td class="detail">帰属の出典が無いか再検証可能なクラスでない: nil</td></tr>
+        <tr><td><code>assert</code></td><td><code>0xdemoe5</code></td><td class="warn">hold</td><td>identity-gate, attribution-gate</td><td class="detail">自然人への紐付けは恒久的にスコープ外（人的承認でも解除不可）: [:person-name]</td></tr>
+        <tr><td><code>query</code></td><td><code>0xtx1</code></td><td class="warn">hold</td><td>finality-gate</td><td class="detail">実際の finality (probabilistic) より強い主張 (final) はできない</td></tr>
+        <tr><td><code>query</code></td><td><code>0xtx1</code></td><td class="ok">commit</td><td>hash, block-number, from, to, value, confirmations, finality</td><td class="detail">committed</td></tr>
+    </tbody>
+  </table>
+  <h2>Attribution catalog</h2>
+  <p class="note">Labels are accepted from 5 re-checkable classes only (self-attestation, entity-published list, sanctions publication, verified source, on-chain registry). Heuristic clustering, vendor risk scores, social reports and LLM inference have NO class to cite and are structurally unpublishable. Linking an address to a natural person is refused outright, with no human override. Chain data itself (blocks/txs/logs) is not an attribution and needs no class — it needs corroboration and a finality class instead.</p>
+  <ul>
+    <li><code>onchain-self-attestation</code> — On-chain self-attestation by the address itself<br><small>再検証: read the same record from any node at the cited block</small></li>
+    <li><code>official-published-address-list</code> — Address list published by the entity itself<br><small>再検証: fetch the cited publication URL and find the address in it</small></li>
+    <li><code>sanctions-list-publication</code> — Official sanctions authority publication<br><small>再検証: look the cited entry up in the authority's own published list</small></li>
+    <li><code>verified-contract-source</code> — Deployed bytecode verified against published source<br><small>再検証: recompile the cited source and byte-compare with the on-chain code</small></li>
+    <li><code>protocol-registry</code> — On-chain canonical registry answers for the address<br><small>再検証: make the same read-only call against any node</small></li>
+  </ul>
+  <h2>Refused, by construction</h2>
+  <ul>
+    <li><code>chain-analytics-score</code></li>
+    <li><code>common-input-ownership</code></li>
+    <li><code>forum-report</code></li>
+    <li><code>heuristic-clustering</code></li>
+    <li><code>llm-inference</code></li>
+    <li><code>pattern-inference</code></li>
+    <li><code>self-reported-unverified</code></li>
+    <li><code>social-report</code></li>
+    <li><code>vendor-risk-score</code></li>
+  </ul>
+  <p class="note">自然人への紐付け: <strong>never</strong>（人的承認による解除経路も無い）</p>
+</body></html>
