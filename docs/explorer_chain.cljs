@@ -19,7 +19,7 @@
   `finalized` block tag is authoritative, and `finality-class` uses it when
   the caller supplies it. The depth-based classes below the finalized head
   are honest labels for 'not final yet', never substitutes for it."
-  (:require [clojure.string :as str]))
+  (:require [kotoba.lang.text :as str]))
 
 ;; ───────────────────────── finality ────────────────────────────────────
 
@@ -188,7 +188,7 @@
   both common; one canonical form in the store avoids labels attaching to
   a spelling instead of an address."
   [a]
-  (when (string? a) (str/lower-case a)))
+  (when (string? a) (str/lower a)))
 
 (defn tx-view
   "A decoded transaction + its context -> the disclosure-shaped view this
