@@ -54,7 +54,7 @@
   address to a natural person is not a labelling decision this actor gets
   to make correctly; it is out of scope permanently
   (`identity-claim?`, enforced as a HARD gate with no human override)."
-  (:require [clojure.string :as str]))
+  (:require [kotoba.lang.text :as str]))
 
 (def catalog
   "Each entry: {:id :name :class :evidence :recheckable-by}.

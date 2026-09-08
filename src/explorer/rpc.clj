@@ -25,7 +25,7 @@
   Plain `.clj` and declared in the `:rpc` alias only: nothing under
   `test/` requires this namespace, so `clojure -M:dev:test` stays offline
   and needs no extra sibling checkout."
-  (:require [clojure.string :as str]
+  (:require [kotoba.lang.text :as str]
             [jsonista.core :as j]
             [kotobase.ethereum.rpc :as rpc]
             [org.httpkit.client :as http]))

@@ -19,7 +19,7 @@
 
   Steps 4 and 5 run at HIGH advisor confidence on purpose: the hard gates
   must not consult confidence at all."
-  (:require [clojure.string :as str]
+  (:require [kotoba.lang.text :as str]
             [langgraph.graph :as g]
             [explorer.chain :as chain]
             [explorer.operation :as op]

@@ -20,7 +20,7 @@
   rejects them at the gate, and the schema gives them nowhere to live even
   if the gate were bypassed — the same belt-and-braces the sibling
   cryptoexchange applies to order-routing fields it refuses to have."
-  (:require [clojure.string :as str]
+  (:require [kotoba.lang.text :as str]
             [explorer.chain :as chain]))
 
 (defprotocol Store

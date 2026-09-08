@@ -13,7 +13,7 @@
 
   What it prints is exactly what the actor would publish, including
   publishing nothing."
-  (:require [clojure.string :as str]
+  (:require [kotoba.lang.text :as str]
             [langgraph.graph :as g]
             [explorer.chain :as chain]
             [explorer.operation :as op]
