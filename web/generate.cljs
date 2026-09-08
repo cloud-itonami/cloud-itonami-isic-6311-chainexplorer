@@ -22,7 +22,7 @@
 ;;     generate.cljs
 ;;   nbb verify_page.cljs
 
-(require '[clojure.string :as str]
+(require '[kotoba.lang.text :as str]
          '[css.core :as css]
          '[html.core]
          '[jp-go-dds.core :as dds]

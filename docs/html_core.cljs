@@ -1,6 +1,6 @@
 (ns html.core
   "Dependency-free Hiccup-compatible EDN to HTML renderer."
-  (:require [clojure.string :as str]))
+  (:require [kotoba.lang.text :as str]))
 
 (defn esc
   "Escape &, <, >, and double quotes for HTML text/attribute context."

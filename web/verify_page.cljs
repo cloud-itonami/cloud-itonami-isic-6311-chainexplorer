@@ -11,7 +11,7 @@
 ;; Run (from this web/ directory):  nbb verify_page.cljs
 
 (require '["fs" :as fs]
-         '[clojure.string :as str])
+         '[kotoba.lang.text :as str])
 
 (def html (fs/readFileSync "../docs/index.html" "utf8"))
 (def ui (fs/readFileSync "../docs/explorer_ui.cljs" "utf8"))

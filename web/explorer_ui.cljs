@@ -15,7 +15,8 @@
 ;; harness can `load-string` this file — same convention, and same reason,
 ;; as catalog.cljs.
 
-(ns explorer.ui)
+(ns explorer.ui
+  (:require [kotoba.lang.text]))
 
 ;; ─────────────────────────── endpoints ───────────────────────────────
 
@@ -128,7 +129,7 @@
          (when (seq (:disagreement c))
            (kv-table
             (map (fn [{:keys [hash endpoints]}]
-                   (kv-row [:code hash] (clojure.string/join ", " endpoints)))
+                   (kv-row [:code hash] (kotoba.lang.text/join ", " endpoints)))
                  (:disagreement c))))
          [:p {:class "x-note"}
           "多数決はしません。2対1でも多数派ハッシュを採用しません — 分裂は人間が見るべき事象であって、このページが黙って投票する場面ではないからです。"]])])))
