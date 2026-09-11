@@ -99,7 +99,7 @@ The GitHub Pages surface at
 is a **static page with no backend**: your browser reads *your* endpoints,
 and `explorer.chain` — the same namespace the ExplorerGovernor uses —
 does the corroboration and finality classification client-side. The
-generator copies that `.cljc` next to the UI, and `web/verify_page.cljs`
+generator copies that `.cljc` next to the UI, and `web/verify_page.cljk`
 asserts the shipped copy is byte-identical to the source, so the page
 cannot drift from the actor's rules.
 

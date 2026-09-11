@@ -71,7 +71,7 @@ jobs:
       - run: npm install -g nbb
       # the published page is a build artifact: regenerate it and fail if
       # the committed copy is stale, so docs/index.html can never drift
-      # from web/ or from src/explorer/chain.cljc.
+      # from web/ or from src/explorer/chain.cljk.
       - name: regenerate + verify the public page
         working-directory: orgs/cloud-itonami/cloud-itonami-isic-6311-chainexplorer/web
         run: |
