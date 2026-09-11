@@ -75,7 +75,7 @@ that are stack-independent still apply.
 ## Verification
 
 - `design-quality` deterministic HIG/WCAG audit: **100.00** (gate ≥95).
-- `nbb web/verify_page.cljk`: 14 structural checks, all passing.
+- `kbb --backend sci web/verify_page.cljk`: 14 structural checks, all passing.
 - **Live browser run** (local server, real endpoints, 2026-07-26):
   - two independent endpoints → head 25617487 / finalized 25617400, head
     classified `probabilistic` and the finalized head `final`; block

@@ -18,9 +18,9 @@
 ;; page cannot drift from the actor's rules; it IS the actor's rules.
 ;;
 ;; Run (from this web/ directory, inside the monorepo checkout):
-;;   nbb --classpath "../../../kotoba-lang/html/src:../../../kotoba-lang/css/src:../../../kotoba-lang/jp-go-digital-design-system/src" \
+;;   kbb --backend sci --classpath "../../../kotoba-lang/html/src:../../../kotoba-lang/css/src:../../../kotoba-lang/jp-go-digital-design-system/src" \
 ;;     generate.cljs
-;;   nbb verify_page.cljs
+;;   kbb --backend sci verify_page.cljk
 
 (require '[kotoba.lang.text :as str]
          '[css.core :as css]

@@ -17,9 +17,9 @@
   :dev {:override-deps
         {io.github.kotoba-lang/langchain
          {:local/root "../../kotoba-lang/langchain"}}}
-  ;; clojure -M:dev:run -> drive the offline 9-operation demo
+  ;; kbb -M:dev:run -> drive the offline 9-operation demo
   :run {:main-opts ["-m" "explorer.sim"]}
-  ;; clojure -M:dev:render-html -> build docs/samples/operator-console.html
+  ;; kbb -M:dev:render-html -> build docs/samples/operator-console.html
   :render-html {:main-opts ["-m" "explorer.render-html"]}
   :test {:extra-paths ["test"]
          :extra-deps {io.github.cognitect-labs/test-runner
@@ -28,12 +28,12 @@
          :exec-fn cognitect.test-runner.api/test}
   ;; Live multi-endpoint chain reads. HERE and not in :deps or :test on
   ;; purpose: only explorer.rpc needs org-ethereum-jsonrpc, nothing under
-  ;; test/ requires that namespace, and CI's offline `clojure -M:dev:test`
+  ;; test/ requires that namespace, and CI's offline `kbb -M:dev:test`
   ;; job checks out only langgraph/langchain -- so the test path must not
   ;; depend on a third sibling checkout. Everything worth testing about
   ;; chain semantics is pure and lives in explorer.chain, which has no
   ;; external dependency at all.
-  ;;   ETH_RPC_URLS=https://a,https://b clojure -M:rpc:dev:run-rpc
+  ;;   ETH_RPC_URLS=https://a,https://b kbb -M:rpc:dev:run-rpc
   :rpc {:extra-deps {http-kit/http-kit {:mvn/version "2.8.0"}
                      metosin/jsonista {:mvn/version "0.3.11"}
                      io.github.kotoba-lang/org-ethereum-jsonrpc

@@ -46,7 +46,7 @@
   "price or market data (that is the sibling cloud-itonami-isic-6311)"]
 
  :itonami.blueprint/verification
- {:offline "clojure -M:dev:test (governor contract, chain semantics, catalog honesty)"
-  :offline-demo "clojure -M:dev:run"
-  :live "ETH_RPC_URLS=<a>,<b> clojure -M:rpc:dev:run-rpc"
+ {:offline "kbb -M:dev:test (governor contract, chain semantics, catalog honesty)"
+  :offline-demo "kbb -M:dev:run"
+  :live "ETH_RPC_URLS=<a>,<b> kbb -M:rpc:dev:run-rpc"
   :live-verified "2026-07-26: two independent public endpoints agreed on block 25617339 -> commit; the same block from one endpoint -> hold (corroboration-gate). Real finalized head 25617272 vs head 25617344 classified :final / :probabilistic respectively."}}

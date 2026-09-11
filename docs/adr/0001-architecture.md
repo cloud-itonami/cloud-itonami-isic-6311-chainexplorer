@@ -116,8 +116,8 @@ test path stays offline.
 
 ## Consequences
 
-- (+) `clojure -M:dev:test`: 51 tests / 193 assertions, 0 failures.
-  `clojure -M:lint`: 0 errors, 0 warnings.
+- (+) `kbb -M:dev:test`: 51 tests / 193 assertions, 0 failures.
+  `kbb -M:lint`: 0 errors, 0 warnings.
 - (+) Verified live 2026-07-26 against two independent public endpoints:
   they agreed on block 25617339 → committed; the same block from a single
   endpoint → held by the corroboration gate. Real finalized head 25617272

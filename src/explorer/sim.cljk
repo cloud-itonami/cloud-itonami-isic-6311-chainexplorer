@@ -1,6 +1,6 @@
 (ns explorer.sim
   "Offline demo — drives one OperationActor through every disposition this
-  actor can reach, with no network. `clojure -M:dev:run`.
+  actor can reach, with no network. `kbb -M:dev:run`.
 
   The scenario is chosen to show the gates that make this an explorer
   rather than an accusation machine, in the order they matter:

@@ -7,7 +7,7 @@
   holds. Same discipline (and same CI sanity-check shape) as the sibling
   market-data actor's console.
 
-  Usage: `clojure -M:dev:render-html [out-file]`"
+  Usage: `kbb -M:dev:render-html [out-file]`"
   (:require [kotoba.lang.text :as str]
             [langgraph.graph :as g]
             [explorer.facts :as facts]

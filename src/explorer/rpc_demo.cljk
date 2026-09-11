@@ -1,8 +1,8 @@
 (ns explorer.rpc-demo
   "Live smoke test against REAL Ethereum endpoints -- NOT run by
-  `clojure -M:dev:test` (network required). Run explicitly:
+  `kbb -M:dev:test` (network required). Run explicitly:
 
-    ETH_RPC_URLS=https://node-a,https://node-b clojure -M:rpc:dev:run-rpc
+    ETH_RPC_URLS=https://node-a,https://node-b kbb -M:rpc:dev:run-rpc
 
   Reads the endpoint list from env HERE (the one place in this actor
   allowed to -- `explorer.rpc` itself never does, see its docstring) and
