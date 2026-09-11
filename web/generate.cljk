@@ -189,8 +189,8 @@
       "大規模に公開することは依然として判断だからです。"])
 
    [:footer {:class "x-footer"}
-    [:p "このページは " [:code "web/generate.cljs"] " (nbb) が生成し、"
-     [:code "web/explorer_ui.cljs"] " (scittle = ブラウザ内 ClojureScript) が実行しています。"
+    [:p "このページは " [:code "web/generate.cljk"] " (nbb) が生成し、"
+     [:code "web/explorer_ui.cljk"] " (scittle = ブラウザ内 ClojureScript) が実行しています。"
      "裏取りと finality の計算は actor 本体の " [:code "explorer.chain"] " をそのまま読み込んでいます。 "
      [:a {:href "https://github.com/cloud-itonami/cloud-itonami-isic-6311-chainexplorer"} "source"]
      " · "
@@ -220,10 +220,10 @@
       "\n"))
 
 ;; Browser-side .cljs are copied, not built. `explorer_chain.cljs` is the
-;; actor's own src/explorer/chain.cljc — the page runs the governor's
+;; actor's own src/explorer/chain.cljk — the page runs the governor's
 ;; corroboration and finality code, so it cannot drift from it.
-(fs/copyFileSync "explorer_ui.cljs" "../docs/explorer_ui.cljs")
-(fs/copyFileSync "../src/explorer/chain.cljc" "../docs/explorer_chain.cljs")
-(fs/copyFileSync (str html-root "/src/html/core.cljc") "../docs/html_core.cljs")
+(fs/copyFileSync "explorer_ui.cljs" "../docs/explorer_ui.cljk")
+(fs/copyFileSync "../src/explorer/chain.cljk" "../docs/explorer_chain.cljk")
+(fs/copyFileSync (str html-root "/src/html/core.cljc") "../docs/html_core.cljk")
 
 (println "wrote docs/index.html + explorer_ui.cljs + explorer_chain.cljs + html_core.cljs")

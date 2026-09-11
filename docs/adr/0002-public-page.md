@@ -29,12 +29,12 @@ exists to reject.
 
 ### 2. The browser runs `explorer.chain` — the governor's own namespace
 
-`web/generate.cljs` copies `src/explorer/chain.cljc` next to the UI code
+`web/generate.cljk` copies `src/explorer/chain.cljk` next to the UI code
 and scittle loads it. Corroboration and finality classification on the page
 are not a re-implementation that could drift from the actor's rules; they
 are the actor's rules, executing client-side.
 
-`web/verify_page.cljs` asserts the shipped copy is **byte-identical** to
+`web/verify_page.cljk` asserts the shipped copy is **byte-identical** to
 the source, because the moment they diverge the page's central claim
 becomes false silently.
 
@@ -75,7 +75,7 @@ that are stack-independent still apply.
 ## Verification
 
 - `design-quality` deterministic HIG/WCAG audit: **100.00** (gate ≥95).
-- `nbb web/verify_page.cljs`: 14 structural checks, all passing.
+- `nbb web/verify_page.cljk`: 14 structural checks, all passing.
 - **Live browser run** (local server, real endpoints, 2026-07-26):
   - two independent endpoints → head 25617487 / finalized 25617400, head
     classified `probabilistic` and the finalized head `final`; block

@@ -14,9 +14,9 @@
          '[kotoba.lang.text :as str])
 
 (def html (fs/readFileSync "../docs/index.html" "utf8"))
-(def ui (fs/readFileSync "../docs/explorer_ui.cljs" "utf8"))
-(def chain-copy (fs/readFileSync "../docs/explorer_chain.cljs" "utf8"))
-(def chain-src (fs/readFileSync "../src/explorer/chain.cljc" "utf8"))
+(def ui (fs/readFileSync "../docs/explorer_ui.cljk" "utf8"))
+(def chain-copy (fs/readFileSync "../docs/explorer_chain.cljk" "utf8"))
+(def chain-src (fs/readFileSync "../src/explorer/chain.cljk" "utf8"))
 
 (def failures (atom []))
 (defn- check! [label ok?]
@@ -28,7 +28,7 @@
 ;; 1. The shipped chain code IS the actor's chain code. If these ever
 ;;    diverge, the page's central claim ("the browser runs the governor's
 ;;    rules") becomes false, silently.
-(check! "docs/explorer_chain.cljs is byte-identical to src/explorer/chain.cljc"
+(check! "docs/explorer_chain.cljk is byte-identical to src/explorer/chain.cljk"
         (= chain-copy chain-src))
 
 ;; 2. Script load order is a dependency order: html.core, then chain, then
