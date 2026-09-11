@@ -111,9 +111,9 @@ classes shown with their re-check instructions and the refused ones listed
 by name.
 
 ```bash
-cd web && nbb --classpath "../../../kotoba-lang/html/src:../../../kotoba-lang/css/src:../../../kotoba-lang/jp-go-digital-design-system/src" \
+cd web && kbb --backend sci --classpath "../../../kotoba-lang/html/src:../../../kotoba-lang/css/src:../../../kotoba-lang/jp-go-digital-design-system/src" \
   generate.cljs        # regenerate docs/index.html
-nbb verify_page.cljs   # 14 structural checks on the artifact that ships
+kbb --backend sci verify_page.cljk   # 14 structural checks on the artifact that ships
 ```
 
 UI stack is DADS (`kotoba-lang/jp-go-digital-design-system`) — the
@@ -124,13 +124,13 @@ the sibling operator console and the fleet catalog took it; see
 ## Run
 
 ```bash
-clojure -M:dev:test    # governor contract · chain semantics · catalog honesty
-clojure -M:dev:run     # offline 9-operation demo through one OperationActor
-clojure -M:lint
+kbb -M:dev:test    # governor contract · chain semantics · catalog honesty
+kbb -M:dev:run     # offline 9-operation demo through one OperationActor
+kbb -M:lint
 
 # live, against REAL nodes (>= 2 independent endpoints required — there is
 # no single-endpoint fallback, by design)
-ETH_RPC_URLS=https://node-a,https://node-b clojure -M:rpc:dev:run-rpc
+ETH_RPC_URLS=https://node-a,https://node-b kbb -M:rpc:dev:run-rpc
 ```
 
 A real run (2026-07-26, two independent public endpoints):
@@ -180,7 +180,7 @@ and even that reaches a human before publication.
 
 `explorer.rpc` is deliberately the only namespace depending on
 `org-ethereum-jsonrpc`, declared in the `:rpc` alias only: nothing under
-`test/` requires it, so `clojure -M:dev:test` stays offline and CI needs no
+`test/` requires it, so `kbb -M:dev:test` stays offline and CI needs no
 extra checkout. Everything worth testing about chain semantics is pure and
 lives in `explorer.chain`.
 

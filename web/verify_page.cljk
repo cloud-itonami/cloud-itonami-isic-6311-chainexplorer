@@ -8,7 +8,7 @@
 ;; cannot be published having quietly lost the parts that make the
 ;; behaviour possible.
 ;;
-;; Run (from this web/ directory):  nbb verify_page.cljs
+;; Run (from this web/ directory):  kbb --backend sci verify_page.cljk
 
 (require '["fs" :as fs]
          '[kotoba.lang.text :as str])

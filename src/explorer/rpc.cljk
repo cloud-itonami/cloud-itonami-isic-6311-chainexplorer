@@ -23,7 +23,7 @@
   injected-credential discipline as the sibling actor's feed connectors.
 
   Plain `.clj` and declared in the `:rpc` alias only: nothing under
-  `test/` requires this namespace, so `clojure -M:dev:test` stays offline
+  `test/` requires this namespace, so `kbb -M:dev:test` stays offline
   and needs no extra sibling checkout."
   (:require [kotoba.lang.text :as str]
             [jsonista.core :as j]
