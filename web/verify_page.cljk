@@ -39,7 +39,7 @@
 (let [srcs (mapv second (re-seq #"<script[^>]*src=\"([^\"]+)\"" html))
       local (filterv #(not (str/starts-with? % "http")) srcs)]
   (check! "scripts load in dependency order (html.core -> chain -> ui)"
-          (= ["html_core.cljs" "explorer_chain.cljs" "explorer_ui.cljs"] local)))
+          (= ["html_core.cljk" "explorer_chain.cljk" "explorer_ui.cljk"] local)))
 
 ;; 3. The corroboration threshold shown to a reader is the one the code
 ;;    enforces — not a number typed into prose.

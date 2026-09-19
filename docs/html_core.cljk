@@ -17,6 +17,24 @@
 
 (def raw-text-tags #{"script" "style"})
 
+(def preserve-whitespace-tags
+  "Elements whose content is whitespace-significant, so the pretty-printer must
+  not indent their children.
+
+  `<pre>` and `<textarea>` render whitespace literally (HTML Standard: both are
+  styled `white-space: pre` and `<textarea>`'s content is its raw value). The
+  block-children indentation below would otherwise turn
+
+      [:pre [:code \"ipfs pin remote ls\"]]
+
+  into `<pre>\\n  <code>…` — a leading blank line plus two spaces of indent that
+  a reader sees, and that a copy-paste carries. Same for a `<textarea>` whose
+  value would silently gain surrounding whitespace.
+
+  This is about the RENDERER's own formatting only; children are still escaped
+  and rendered normally, just without injected newlines."
+  #{"pre" "textarea"})
+
 (defn raw
   "Mark trusted markup as unescaped. Never pass untrusted input."
   [value]
@@ -113,7 +131,8 @@
                                             "> contains a closing-tag breakout")
                                        {:tag tag})))
                      (conj! sb content))
-                   (if (block-children? children)
+                   (if (and (block-children? children)
+                            (not (contains? preserve-whitespace-tags tag)))
                      (let [sb (reduce (fn [s child]
                                        (render-node child
                                                     (conj! (conj! s "\n")

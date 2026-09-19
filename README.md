@@ -112,7 +112,7 @@ by name.
 
 ```bash
 cd web && kbb --backend sci --classpath "../../../kotoba-lang/html/src:../../../kotoba-lang/css/src:../../../kotoba-lang/jp-go-digital-design-system/src" \
-  generate.cljs        # regenerate docs/index.html
+  generate.cljk        # regenerate docs/index.html
 kbb --backend sci verify_page.cljk   # 14 structural checks on the artifact that ships
 ```
 

@@ -75,6 +75,6 @@ jobs:
       - name: regenerate + verify the public page
         working-directory: orgs/cloud-itonami/cloud-itonami-isic-6311-chainexplorer/web
         run: |
-          nbb --classpath "../../../kotoba-lang/html/src:../../../kotoba-lang/css/src:../../../kotoba-lang/jp-go-digital-design-system/src" generate.cljs
-          nbb verify_page.cljs
+          nbb --classpath "../../../kotoba-lang/html/src:../../../kotoba-lang/css/src:../../../kotoba-lang/jp-go-digital-design-system/src" generate.cljk
+          nbb verify_page.cljk
           cd .. && git diff --exit-code docs/

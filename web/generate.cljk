@@ -19,7 +19,7 @@
 ;;
 ;; Run (from this web/ directory, inside the monorepo checkout):
 ;;   kbb --backend sci --classpath "../../../kotoba-lang/html/src:../../../kotoba-lang/css/src:../../../kotoba-lang/jp-go-digital-design-system/src" \
-;;     generate.cljs
+;;     generate.cljk
 ;;   kbb --backend sci verify_page.cljk
 
 (require '[kotoba.lang.text :as str]
@@ -202,9 +202,9 @@
 ;; 読み込み順は依存順: html.core → explorer.chain → UI。
 (def scripts
   [[:script {:src "https://cdn.jsdelivr.net/npm/scittle@0.6.22/dist/scittle.js"}]
-   [:script {:type "application/x-scittle" :src "html_core.cljs"}]
-   [:script {:type "application/x-scittle" :src "explorer_chain.cljs"}]
-   [:script {:type "application/x-scittle" :src "explorer_ui.cljs"}]])
+   [:script {:type "application/x-scittle" :src "html_core.cljk"}]
+   [:script {:type "application/x-scittle" :src "explorer_chain.cljk"}]
+   [:script {:type "application/x-scittle" :src "explorer_ui.cljk"}]])
 
 (fs/mkdirSync "../docs" #js {:recursive true})
 (fs/writeFileSync
@@ -222,8 +222,8 @@
 ;; Browser-side .cljs are copied, not built. `explorer_chain.cljs` is the
 ;; actor's own src/explorer/chain.cljk — the page runs the governor's
 ;; corroboration and finality code, so it cannot drift from it.
-(fs/copyFileSync "explorer_ui.cljs" "../docs/explorer_ui.cljk")
+(fs/copyFileSync "explorer_ui.cljk" "../docs/explorer_ui.cljk")
 (fs/copyFileSync "../src/explorer/chain.cljk" "../docs/explorer_chain.cljk")
-(fs/copyFileSync (str html-root "/src/html/core.cljc") "../docs/html_core.cljk")
+(fs/copyFileSync (str html-root "/src/html/core.cljk") "../docs/html_core.cljk")
 
-(println "wrote docs/index.html + explorer_ui.cljs + explorer_chain.cljs + html_core.cljs")
+(println "wrote docs/index.html + explorer_ui.cljk + explorer_chain.cljk + html_core.cljk")
