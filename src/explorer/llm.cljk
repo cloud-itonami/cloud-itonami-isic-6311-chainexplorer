@@ -26,7 +26,7 @@
   behaviour of a language model asked 'who owns this address?'. The mock
   states them at HIGH confidence on purpose, to prove the hard gates do not
   consult confidence at all."
-  (:require #?(:clj  [clojure.edn :as edn]
+  (:require #?(:clj  [kotoba.lang.edn :as edn]
                :cljs [cljs.reader :as edn])
             [kotoba.lang.text :as str]
             [explorer.chain :as chain]
