@@ -4,7 +4,7 @@
   every advertised class is backed by a real, re-checkable evidence
   description, and every class a conventional explorer relies on stays
   OUT."
-  (:require [clojure.test :refer [deftest is testing]]
+  (:require [kotoba.test :refer [deftest is testing]]
             [explorer.facts :as facts]))
 
 (deftest catalog-entries-are-well-formed-and-recheckable
