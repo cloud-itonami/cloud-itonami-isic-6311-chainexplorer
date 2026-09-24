@@ -9,7 +9,7 @@
 
   Read the identity-gate tests first. They are the ones protecting someone
   who is not this actor's customer and will never know it ran."
-  (:require [clojure.test :refer [deftest is testing]]
+  (:require [kotoba.test :refer [deftest is testing]]
             [langgraph.graph :as g]
             [explorer.operation :as op]
             [explorer.store :as store]))

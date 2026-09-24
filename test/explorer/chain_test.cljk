@@ -1,7 +1,7 @@
 (ns explorer.chain-test
   "Finality classification, reorg detection and multi-endpoint
   corroboration — all pure, all offline."
-  (:require [clojure.test :refer [deftest is testing]]
+  (:require [kotoba.test :refer [deftest is testing]]
             [explorer.chain :as chain]))
 
 ;; ───────────────────────── finality ────────────────────────────────────
