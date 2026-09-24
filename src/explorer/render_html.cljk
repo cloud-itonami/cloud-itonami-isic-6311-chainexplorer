@@ -8,7 +8,7 @@
   market-data actor's console.
 
   Usage: `kbb -M:dev:render-html [out-file]`"
-  (:require [kotoba.lang.text :as str]
+  (:require [kotoba.io :as kio] [kotoba.lang.text :as str]
             [langgraph.graph :as g]
             [explorer.facts :as facts]
             [explorer.operation :as op]
@@ -120,6 +120,6 @@
   (let [f (or out "docs/samples/operator-console.html")
         db (run-demo!)
         html (render db)]
-    (.mkdirs (java.io.File. (.getParent (java.io.File. f))))
+    (kio/mkdirs (kio/file (kio/parent (kio/file f))))
     (spit f html)
     (println "wrote" f "(" (count (store/ledger db)) "ledger facts )")))
