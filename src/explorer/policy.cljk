@@ -37,7 +37,7 @@
 
   Reorg handling is not a gate but an op (`:reorg/resolve`) that is never
   auto-eligible — see `explorer.phase`."
-  (:require [clojure.set :as set]
+  (:require [kotoba.lang.coll :as set]
             [explorer.chain :as chain]
             [explorer.facts :as facts]
             [explorer.store :as store]))
