@@ -3,7 +3,7 @@
  ;; transitively (langchain.model is the advisor seam). Both live in the
  ;; kotoba-lang org of this workspace and are all-.cljc / portable
  ;; (kotoba wasm -> clojurewasm -> ClojureScript -> nbb runtime priority,
- ;; CLAUDE.md). These :local/root paths resolve inside the monorepo
+ ;; AGENTS.md). These :local/root paths resolve inside the monorepo
  ;; checkout; a standalone fork overrides them with git coordinates.
  :deps {
         ;; kotoba.test (clojure.test-compatible surface), not clojure.test --
